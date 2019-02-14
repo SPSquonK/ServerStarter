@@ -10,13 +10,6 @@ from subprocess import Popen, PIPE
 # for local testing purposes.
 #
 # Error checking is kept to a minimum as this program is not intended to be use in production context
-#
-# This script is distributed under the CC0 licence.
-
-# 1/ Launch a server
-# 2/ Track started part and restart what crashed
-# 3/ track changed parts of the server and restart what changed
-
 
 
 """ Represents a generic program with a source file where is written the compiled program and a destination executable. """
@@ -128,7 +121,7 @@ class ProgramServer(Program):
 
     # Initialize the program
     def __init__(self, name, executable, source, timeout, hide = True):
-        Program.__init__(self, executable, source)
+        Program.__init__(self, "..\\Program\\" + executable, source)
     
         # Passed properties
         self.name = name
@@ -143,7 +136,7 @@ class ProgramServer(Program):
         
         # Built properties
         self.process = None
-        self.cwd = "..\\Output\\"
+        self.cwd = "..\\Program\\"
         
         
     # Add a dependencie
