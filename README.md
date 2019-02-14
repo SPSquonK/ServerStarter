@@ -10,7 +10,7 @@ This script uses python, so be sure python is installed on your system. As FlyFF
 
 - The script can be started by running the provided bat file or `python LauncherWindow.py`
 
-- This repo should be cloned in a repertory next to the Source, Program and Resource folders.
+- This repo should be cloned in a repertory next to the Source, Program and Resource folders. (So for example, if your FlyFF development folder is `B:\FlyFF\`, your ouput folder will be `B:\FlyFF\Ouput`, your resource will be `B:\FlyFF\Resource`, and the files of this repository will be `B:\FlyFF\Starter`)
 
 ## Goal
 
