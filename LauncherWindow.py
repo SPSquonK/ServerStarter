@@ -59,7 +59,7 @@ class Toplevel1:
         _ana2color = '#ececec' # Closest X11 color: 'gray92' 
 
         top.geometry("511x327+1247+587")
-        top.title("SQK FlyFF Server Starter")
+        top.title("FlyFF Server Starter")
         top.configure(relief="ridge")
         top.configure(background="#d9d9d9")
         top.configure(highlightbackground="#d9d9d9")

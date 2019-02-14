@@ -87,7 +87,7 @@ proc vTclWindow.top42 {base} {
     wm overrideredirect $top 0
     wm resizable $top 1 1
     wm deiconify $top
-    wm title $top "SQK FlyFF Server Starter"
+    wm title $top "FlyFF Server Starter"
     vTcl:DefineAlias "$top" "Toplevel1" vTcl:Toplevel:WidgetProc "" 1
     labelframe $top.lab44 \
         -font TkDefaultFont -foreground black -text Server \
