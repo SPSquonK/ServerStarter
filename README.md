@@ -1,6 +1,8 @@
 # ServerStarter
 
-This is a small python script intended to FlyFF developpers.
+This is a small python script intended to FlyFF developpers to make it easier to start / restart the parts of the server during development.
+
+![A screenshot](https://image.noelshack.com/fichiers/2019/07/4/1550168136-launcher2.png)
 
 ## Install the script
 
