@@ -12,7 +12,7 @@ from subprocess import Popen, PIPE
 # Error checking is kept to a minimum as this program is not intended to be use in production context
 
 
-""" Represents a generic program with a source file where is written the compiled program and a destination executable. """
+# Represents a generic program with a source file where is written the compiled program and a destination executable.
 class Program:
     def __init__(self, executable, source):
         self.executable = executable
@@ -20,11 +20,9 @@ class Program:
         self.dateofexecutable = os.path.getmtime(self.executable)
         self.isuptodate = True
         self.functions = []
-        
     
     def kill_all_process(self):
         print("Abstract method : Not implemented")
-    
     
     # Returns true if the stored executable is up to date according to the source
     def is_up_to_date(self):
@@ -66,15 +64,13 @@ class Program:
         for function in self.functions:
             function(self)
     
-
-
+    
 class ProgramClient(Program):
     def __init__(self, executable, source):
         Program.__init__(self, executable, source)
         self.processes = []
         self.cwd = "..\\Resource\\"
         
-    
     def kill_all_process(self):
         for process in self.processes:
             process.kill()
@@ -100,14 +96,9 @@ class ProgramClient(Program):
     def open_ini(self):
         ini_file = self.executable[:-3] + "ini"
         os.startfile(ini_file)
-        
-        
-    
-    
-    
-    
 
-""" Represents a program which is part of a server (only one process concurrently, can have a dependencie) """
+
+# Represents a program which is part of a server (only one process concurrently, can have a dependencie)
 class ProgramServer(Program):
     startuphidden = None
 
@@ -118,9 +109,8 @@ class ProgramServer(Program):
                 ProgramServer.startuphidden = subprocess.STARTUPINFO()
                 ProgramServer.startuphidden.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-
     # Initialize the program
-    def __init__(self, name, executable, source, timeout, hide = True):
+    def __init__(self, name, executable, source, timeout, hide=True):
         Program.__init__(self, "..\\Program\\" + executable, source)
     
         # Passed properties
@@ -138,12 +128,10 @@ class ProgramServer(Program):
         self.process = None
         self.cwd = "..\\Program\\"
         
-        
     # Add a dependencie
     def add_dependencie(self, dependencie):
         self.dependencies.append(dependencie)
         dependencie.reliedby.append(self)
-        
         
     # Returns true if a process for this program is running
     def is_running(self):
@@ -156,7 +144,6 @@ class ProgramServer(Program):
         self.process = None
         return False
         
-    
     # If the process is running, kills it
     def kill(self):
         if self.process is None:
@@ -174,7 +161,6 @@ class ProgramServer(Program):
             
         self.kill()
     
-    
     def kill_all_process(self):
         if self.is_running():
             self.kill_top()
@@ -186,7 +172,6 @@ class ProgramServer(Program):
             return FlyFFLauncher.STATUS_STARTED
         else:
             return FlyFFLauncher.STATUS_OBSOLETE
-    
     
     def start(self):
         restart = False
@@ -209,7 +194,6 @@ class ProgramServer(Program):
             else:
                 return FlyFFLauncher.ALREADY_STARTED
         
-        
         startupinfo = ProgramServer.startuphidden if self.hide else None
         
         self.process = self.start_a_new_process(startupinfo)
@@ -220,7 +204,7 @@ class ProgramServer(Program):
             return FlyFFLauncher.CHANGED_PROCESS
         else:
             return FlyFFLauncher.COULDNT_START
-    
+            
 
 # Global launcher
 class FlyFFLauncher:
@@ -262,12 +246,9 @@ class FlyFFLauncher:
     
     def kill(self):
         self.kill_server()
-        
         self.client.kill_all_process()
         
-    
     # GUI
-    
     def bind(self, index, function):
         self.list[index].bind(function)
         
@@ -308,8 +289,8 @@ def link_with_gui(root, interface):
     atexit.register(onClose)
     
     # Server
-    status_text = {FlyFFLauncher.STATUS_STARTED : "ON", FlyFFLauncher.STATUS_OFF : "OFF", FlyFFLauncher.STATUS_OBSOLETE : "UPDATE"}
-    status_color = {FlyFFLauncher.STATUS_STARTED : "#005000", FlyFFLauncher.STATUS_OFF : "#FF0000", FlyFFLauncher.STATUS_OBSOLETE : "#FF8000"}
+    status_text = {FlyFFLauncher.STATUS_STARTED: "ON", FlyFFLauncher.STATUS_OFF: "OFF", FlyFFLauncher.STATUS_OBSOLETE: "UPDATE"}
+    status_color = {FlyFFLauncher.STATUS_STARTED: "#005000", FlyFFLauncher.STATUS_OFF: "#FF0000", FlyFFLauncher.STATUS_OBSOLETE: "#FF8000"}
     
     def bind_line(index, box_name, box_status, check_box):
         def copy_name(program):
@@ -347,6 +328,7 @@ def link_with_gui(root, interface):
     
     def start_in_new_thread():
         from threading import Thread
+        
         class StartingThread(Thread):
             def __init__(self):
                 Thread.__init__(self)
@@ -361,12 +343,10 @@ def link_with_gui(root, interface):
         thread = StartingThread()
         thread.start()
     
-    
     interface.ServStart.configure(command=start_in_new_thread)
     interface.ServStop.configure(command=flyff.kill_server)
     
     # Client
-    
     def to_bind_client(client):
         if client.is_up_to_date():
             text = "Neuz is up to date"
@@ -390,7 +370,6 @@ def link_with_gui(root, interface):
         interface.ClientState2.configure(text=text)
         interface.ClientState2.configure(foreground=color)
     
-    
     flyff.bind_client(to_bind_client)
     
     interface.ClientStartBig.configure(command=flyff.client.start_new_process)
@@ -404,11 +383,3 @@ def link_with_gui(root, interface):
         root.after(1000, perpetual)
         
     perpetual()
-        
-    
-    
-    
-    
-    
-
-
