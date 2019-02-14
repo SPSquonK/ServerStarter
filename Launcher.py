@@ -143,6 +143,7 @@ class ProgramServer(Program):
         
         # Built properties
         self.process = None
+        self.cwd = "..\\Output\\"
         
         
     # Add a dependencie
