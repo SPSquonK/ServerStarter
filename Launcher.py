@@ -220,14 +220,17 @@ class FlyFFLauncher:
     def __init__(self):
         self.client = ProgramClient('..\\Resource\\Neuz.exe', '..\\Output\\Neuz\\NoGameguard\\Neuz.exe')
     
+        def make_output_path(name):
+            return '..\\Output\\' + name + '\\Release\\' + name + '.exe'
+    
         self.list = []
-        self.list.append(ProgramServer('Account', 'AccountServer.exe', '..\\Output\\AccountServer\\Release\\AccountServer.exe', 2, True))
-        self.list.append(ProgramServer('Database', 'DatabaseServer.exe', '..\\Output\\DatabaseServer\\Release\\DatabaseServer.exe', 2, True))
-        self.list.append(ProgramServer('Core', 'CoreServer.exe', '..\\Output\\CoreServer\\Release\\CoreServer.exe', 2, True))
-        self.list.append(ProgramServer('Certifier', 'Certifier.exe', '..\\Output\\Certifier\\Release\\Certifier.exe', 2, True))
-        self.list.append(ProgramServer('Login', 'LoginServer.exe', '..\\Output\\LoginServer\\Release\\LoginServer.exe', 2, True))
-        self.list.append(ProgramServer('Cache', 'CacheServer.exe', '..\\Output\\CacheServer\\Release\\CacheServer.exe', 2, True))
-        self.list.append(ProgramServer('WorldServer', 'WorldServer.exe', '..\\Output\\WorldServer\\Release\\WorldServer.exe', 0, False))
+        self.list.append(ProgramServer('Account', 'AccountServer.exe', make_output_path('AccountServer'), 2, True))
+        self.list.append(ProgramServer('Database', 'DatabaseServer.exe', make_output_path('DatabaseServer'), 2, True))
+        self.list.append(ProgramServer('Core', 'CoreServer.exe', make_output_path('CoreServer'), 2, True))
+        self.list.append(ProgramServer('Certifier', 'Certifier.exe', make_output_path('Certifier'), 2, True))
+        self.list.append(ProgramServer('Login', 'LoginServer.exe', make_output_path('LoginServer'), 2, True))
+        self.list.append(ProgramServer('Cache', 'CacheServer.exe', make_output_path('CacheServer'), 2, True))
+        self.list.append(ProgramServer('WorldServer', 'WorldServer.exe', make_output_path('WorldServer'), 0, False))
         
         # Add dependencies
         for i in range(6):
@@ -289,8 +292,17 @@ def link_with_gui(root, interface):
     atexit.register(onClose)
     
     # Server
-    status_text = {FlyFFLauncher.STATUS_STARTED: "ON", FlyFFLauncher.STATUS_OFF: "OFF", FlyFFLauncher.STATUS_OBSOLETE: "UPDATE"}
-    status_color = {FlyFFLauncher.STATUS_STARTED: "#005000", FlyFFLauncher.STATUS_OFF: "#FF0000", FlyFFLauncher.STATUS_OBSOLETE: "#FF8000"}
+    status_text = {
+        FlyFFLauncher.STATUS_STARTED: "ON",
+        FlyFFLauncher.STATUS_OFF: "OFF",
+        FlyFFLauncher.STATUS_OBSOLETE: "UPDATE"
+    }
+    
+    status_color = {
+        FlyFFLauncher.STATUS_STARTED: "#005000",
+        FlyFFLauncher.STATUS_OFF: "#FF0000",
+        FlyFFLauncher.STATUS_OBSOLETE: "#FF8000"
+    }
     
     def bind_line(index, box_name, box_status, check_box):
         def copy_name(program):
