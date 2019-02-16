@@ -250,7 +250,10 @@ class FlyFFLauncher:
     def kill(self):
         self.kill_server()
         self.client.kill_all_process()
-        
+    
+    def open_dir(self):
+        os.startfile("..\\")
+    
     # GUI
     def bind(self, index, function):
         self.list[index].bind(function)
@@ -290,6 +293,10 @@ def link_with_gui(root, interface):
         flyff.kill()
 
     atexit.register(onClose)
+    
+    # Extra button
+    interface.OpenFlyFFDir.configure(command=flyff.open_dir)
+    
     
     # Server
     status_text = {
