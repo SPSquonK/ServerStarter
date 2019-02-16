@@ -84,6 +84,8 @@ class ProgramClient(Program):
         self.processes.append(self.start_a_new_process(None))
     
     def get_number_of_processes(self):
+        self.processes = [p for p in self.processes if p.poll() is None]
+    
         return len(self.processes)
         
     def kill_and_update(self):
