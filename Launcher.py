@@ -155,13 +155,11 @@ class ProgramServer(Program):
         self.process = None
     
     def kill_top(self):
-        if not self.is_running():
-            return
-            
         for relied in self.reliedby:
             relied.kill_top()
             
-        self.kill()
+        if self.is_running():
+            self.kill()
     
     def kill_all_process(self):
         if self.is_running():
@@ -190,11 +188,10 @@ class ProgramServer(Program):
             self.update()
             restart = True
         
-        if self.is_running():
-            if restart:
-                self.kill_top()
-            else:
-                return FlyFFLauncher.ALREADY_STARTED
+        if self.is_running() and not restart:
+            return FlyFFLauncher.ALREADY_STARTED
+        
+        self.kill_top()
         
         startupinfo = ProgramServer.startuphidden if self.hide else None
         
@@ -298,7 +295,6 @@ def link_with_gui(root, interface):
     
     # Extra button
     interface.OpenFlyFFDir.configure(command=flyff.open_dir)
-    
     
     # Server
     status_text = {
