@@ -88,6 +88,14 @@ class ProgramClient(Program):
     
         return len(self.processes)
         
+    # Start a new process. If not up to date, kill every process to update the file
+    def start_updated(self):
+        if not self.is_up_to_date():
+            self.kill_all_process()
+        
+        self.start_new_process()
+        
+    # Old Kill and update button
     def kill_and_update(self):
         if self.is_up_to_date():
             return
@@ -390,7 +398,8 @@ def link_with_gui(root, interface):
     flyff.bind_client(to_bind_client)
     
     interface.ClientStartBig.configure(command=flyff.client.start_new_process)
-    interface.ClientUpdate.configure(command=flyff.client.kill_and_update)
+    interface.ClientUpdate.configure(text='''Start Updated''')
+    interface.ClientUpdate.configure(command=flyff.client.start_updated)
     interface.ClientKill.configure(command=flyff.client.kill_all_process)
     interface.ClientIni.configure(command=flyff.client.open_ini)
     
