@@ -75,7 +75,7 @@ class ProgramClient(Program):
         for process in self.processes:
             process.kill()
             
-        self.processes.clear()
+        self.processes = []
         
     def start_new_process(self):
         if self.get_number_of_processes() == 0:
@@ -90,18 +90,18 @@ class ProgramClient(Program):
         
     # Start a new process. If not up to date, kill every process to update the file
     def start_updated(self):
-        if not self.is_up_to_date():
-            self.kill_all_process()
-        
+        self.kill_and_update()
         self.start_new_process()
         
     # Old Kill and update button
     def kill_and_update(self):
         if self.is_up_to_date():
-            return
+            return False
         
         self.kill_all_process()
+        time.sleep(0.2)
         self.update()
+        return True
         
     def open_ini(self):
         ini_file = self.executable[:-3] + "ini"
