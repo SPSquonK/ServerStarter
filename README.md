@@ -26,7 +26,7 @@ This script is able to start the differents programs managing a server and start
 
 - The script tracks for new Server Executable and can run them
 
-    - This script uses the files found in `..\Output\X\Release\X.exe` as the "newly compiled files". When the user starts a server, it will check if new compiled files are more up to date than the one in `Program`, and if so, it will replace the one in the Program folder with the one in the Output folder.
+    - This script uses the files found in `..\Output\X\Release\X.exe` as the "newly compiled files" where X can be AccountServer, CacheServer, Certifier, CoreServer, DatabaseServer, LoginServer or WorldServer. When the user starts a server, it will check if new compiled files are more up to date than the one in `Program`, and if so, it will replace the one in the Program folder with the one in the Output folder.
 
     - The server is started using the executables in `..\Program.exe`.
 
