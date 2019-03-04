@@ -95,11 +95,10 @@ class ProgramClient(Program):
         
     # Old Kill and update button
     def kill_and_update(self):
-        if self.is_up_to_date():
-            return False
-        
         self.kill_all_process()
         time.sleep(0.2)
+        if self.is_up_to_date():
+            return False
         self.update()
         return True
         
@@ -398,7 +397,7 @@ def link_with_gui(root, interface):
     flyff.bind_client(to_bind_client)
     
     interface.ClientStartBig.configure(command=flyff.client.start_new_process)
-    interface.ClientUpdate.configure(text='''Start Updated''')
+    interface.ClientUpdate.configure(text='''Restart One''')
     interface.ClientUpdate.configure(command=flyff.client.start_updated)
     interface.ClientKill.configure(command=flyff.client.kill_all_process)
     interface.ClientIni.configure(command=flyff.client.open_ini)
