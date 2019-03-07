@@ -96,7 +96,11 @@ class ProgramClient(Program):
     # Old Kill and update button
     def kill_and_update(self):
         self.kill_all_process()
-        time.sleep(0.2)
+        
+        #Because do while 
+        while self.get_number_of_processes() != 0:
+            time.sleep(0.1)
+        
         if self.is_up_to_date():
             return False
         self.update()
