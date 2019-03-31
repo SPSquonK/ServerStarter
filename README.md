@@ -57,6 +57,8 @@ This script is able to start the differents programs managing a server and start
 
 - This script is only intended for development purpose, and should not be used in production. The main reason you shouldn't use this in production context is that the main goal of the application, tracking for newly compiled executables and replacing started processes, is useless in this case.
 
+- It is possible to make a "Git" button appears which will open a git friendly terminal in the parent folder. To enables this option, open Launcher.py, and modify the line which starts with GIT_EXECUTABLE_PATH to specify a folter to your favorite terminal. If you use a Git Bash instance that is installed in the default folder, you can also comment the first GIT_EXECUTABLE_PATH line and uncomment the second one.
+
 - For production context, if one wants to have a simple script to runs every part of the server without the layer of executable tracking and without the hassle of starting manually 7 processes, here is a simple bat script :
 
 ```bash

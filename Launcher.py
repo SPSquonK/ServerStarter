@@ -11,6 +11,10 @@ from subprocess import Popen, PIPE
 #
 # Error checking is kept to a minimum as this program is not intended to be use in production context
 
+# Options
+GIT_EXECUTABLE_PATH = None  # If you want the git button, replace with the path a git executable
+# GIT_EXECUTABLE_PATH = "C:\Program Files\Git\git-bash.exe"
+
 
 # Represents a generic program with a source file where is written the compiled program and a destination executable.
 class Program:
@@ -75,7 +79,6 @@ class ProgramClient(Program):
         for process in self.processes:
             process.kill()
             
-        
         while self.get_number_of_processes() != 0:
             time.sleep(0.1)
         
@@ -394,6 +397,14 @@ def link_with_gui(root, interface):
     interface.ClientUpdate.configure(command=flyff.client.start_updated)
     interface.ClientKill.configure(command=flyff.client.kill_all_process)
     interface.ClientIni.configure(command=flyff.client.open_ini)
+    
+    # Git Button
+    if GIT_EXECUTABLE_PATH is None:
+        interface.GitButton.place_forget()
+    else:
+        def git_opener():
+            subprocess.Popen(GIT_EXECUTABLE_PATH, cwd="..")
+        interface.GitButton.configure(command=git_opener)
     
     # Apply binds
     def perpetual():
