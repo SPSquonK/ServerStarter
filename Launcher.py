@@ -12,8 +12,8 @@ from subprocess import Popen, PIPE
 # Error checking is kept to a minimum as this program is not intended to be use in production context
 
 # Options
-GIT_EXECUTABLE_PATH = None  # If you want the git button, replace with the path a git executable
-# GIT_EXECUTABLE_PATH = "C:\Program Files\Git\git-bash.exe"
+# GIT_EXECUTABLE_PATH = None  # If you want the git button, replace with the path a git executable
+GIT_EXECUTABLE_PATH = "C:\Program Files\Git\git-bash.exe"
 
 
 # Represents a generic program with a source file where is written the compiled program and a destination executable.
@@ -183,7 +183,7 @@ class ProgramServer(Program):
             status = dependencie.start()
             
             if status == FlyFFLauncher.COULDNT_START:
-                return FlyFFLauncher.COULDNT_START
+                return (0, FlyFFLauncher.COULDNT_START)
             elif status == FlyFFLauncher.CHANGED_PROCESS:
                 restart = True
         
@@ -192,7 +192,7 @@ class ProgramServer(Program):
             restart = True
         
         if self.is_running() and not restart:
-            return FlyFFLauncher.ALREADY_STARTED
+            return (0, FlyFFLauncher.ALREADY_STARTED)
         
         self.kill_top()
         
@@ -200,12 +200,12 @@ class ProgramServer(Program):
         
         self.process = self.start_a_new_process(startupinfo)
         
-        time.sleep(self.timeout)
+        time.sleep(1)
 
         if self.is_running():
-            return FlyFFLauncher.CHANGED_PROCESS
+            return (self.timeout - 1, FlyFFLauncher.CHANGED_PROCESS)
         else:
-            return FlyFFLauncher.COULDNT_START
+            return (self.timeout - 1, FlyFFLauncher.COULDNT_START)
             
 
 # Global launcher
@@ -226,28 +226,51 @@ class FlyFFLauncher:
             return '..\\Output\\' + name + '\\Release\\' + name + '.exe'
     
         self.list = []
-        self.list.append(ProgramServer('Account', 'AccountServer.exe', make_output_path('AccountServer'), 2, True))
-        self.list.append(ProgramServer('Database', 'DatabaseServer.exe', make_output_path('DatabaseServer'), 2, True))
-        self.list.append(ProgramServer('Core', 'CoreServer.exe', make_output_path('CoreServer'), 2, True))
-        self.list.append(ProgramServer('Certifier', 'Certifier.exe', make_output_path('Certifier'), 2, True))
-        self.list.append(ProgramServer('Login', 'LoginServer.exe', make_output_path('LoginServer'), 2, True))
-        self.list.append(ProgramServer('Cache', 'CacheServer.exe', make_output_path('CacheServer'), 2, True))
-        self.list.append(ProgramServer('WorldServer', 'WorldServer.exe', make_output_path('WorldServer'), 0, False))
+        #self.list.append(ProgramServer('Account', 'AccountServer.exe', make_output_path('AccountServer'), 2, True))
+        self.list.append(ProgramServer('AccountDatabase', 'DatabaseServer.exe', make_output_path('DatabaseServer'), 3, True))
+        self.list.append(ProgramServer('CoreWorld', 'WorldServer.exe', make_output_path('WorldServer'), 4, False))
+        #self.list.append(ProgramServer('Core', 'CoreServer.exe', make_output_path('CoreServer'), 2, True))
+        #self.list.append(ProgramServer('Certifier', 'Certifier.exe', make_output_path('Certifier'), 2, True))
+        self.list.append(ProgramServer('CertifierLoginCache', 'LoginServer.exe', make_output_path('LoginServer'), 2, True))
+        #self.list.append(ProgramServer('Cache', 'CacheServer.exe', make_output_path('CacheServer'), 2, True))
+        #self.list.append(ProgramServer('WorldServer', 'WorldServer.exe', make_output_path('WorldServer'), 0, False))
         
         # Add dependencies
-        for i in range(6):
+        for i in range(len(self.list) - 1):
             self.list[i + 1].add_dependencie(self.list[i])
     
     # Launch every process of the list
     def start(self):
+        extra_timeout = 0
         for program in self.list:
-            if program.start() == FlyFFLauncher.COULDNT_START:
+            if extra_timeout != 0:
+                time.sleep(extra_timeout)
+            
+            extra_timeout, error = program.start() 
+            if error == FlyFFLauncher.COULDNT_START:
+                return False
+        return True
+        
+    def start_with_bound(self, i):
+        extra_timeout = 0
+        for program in self.list[0:i]:
+            if extra_timeout != 0:
+                time.sleep(extra_timeout)
+                
+            extra_timeout, error = program.start() 
+            if error == FlyFFLauncher.COULDNT_START:
                 return False
         return True
     
     def kill_server(self):
         for program in self.list:
             program.kill()
+    
+    def func_server_killer(self, i):
+        def f():
+            for program in self.list[i:]:
+                program.kill()
+        return f
     
     def kill(self):
         self.kill_server()
@@ -341,10 +364,6 @@ def link_with_gui(root, interface):
     bind_line(0, interface.ServMsg01, interface.ServState01, interface.ServCbx01)
     bind_line(1, interface.ServMsg02, interface.ServState02, interface.ServCbx02)
     bind_line(2, interface.ServMsg03, interface.ServState03, interface.ServCbx03)
-    bind_line(3, interface.ServMsg04, interface.ServState04, interface.ServCbx04)
-    bind_line(4, interface.ServMsg05, interface.ServState05, interface.ServCbx05)
-    bind_line(5, interface.ServMsg06, interface.ServState06, interface.ServCbx06)
-    bind_line(6, interface.ServMsg07, interface.ServState07, interface.ServCbx07)
     
     def start_in_new_thread():
         from threading import Thread
@@ -354,17 +373,54 @@ def link_with_gui(root, interface):
                 Thread.__init__(self)
     
             def run(self):
-                interface.ServStart.configure(state=tk.DISABLED)
-                interface.ServStop.configure(state=tk.DISABLED)
+                for b in button_list:
+                    b.configure(state=tk.DISABLED)
                 flyff.start()
-                interface.ServStart.configure(state=tk.NORMAL)
-                interface.ServStop.configure(state=tk.NORMAL)
+                for b in button_list:
+                    b.configure(state=tk.NORMAL)
     
         thread = StartingThread()
         thread.start()
+        
+    def start_with_bound_maker(i):
+        def ss():
+            from threading import Thread
+            
+            class StartingThread(Thread):
+                def __init__(self):
+                    Thread.__init__(self)
+        
+                def run(self):
+                    for b in button_list:
+                        b.configure(state=tk.DISABLED)
+                        
+                    flyff.start_with_bound(i)
+                    for b in button_list:
+                        b.configure(state=tk.NORMAL)
+        
+            thread = StartingThread()
+            thread.start()
+        return ss
+    
+    button_list = [
+        interface.ServStart, interface.ServStart_2,
+        interface.ServStart_1, interface.Button4,
+        interface.Button1, interface.Button2,
+        interface.ServStop, interface.Button3
+    ]
     
     interface.ServStart.configure(command=start_in_new_thread)
-    interface.ServStop.configure(command=flyff.kill_server)
+    interface.ServStart_2.configure(command=flyff.kill_server)
+    
+    interface.ServStart_1.configure(command=start_in_new_thread)
+    interface.Button4.configure(command=flyff.kill_server)
+    
+    interface.Button1.configure(command=start_with_bound_maker(1))
+    interface.Button2.configure(command=start_with_bound_maker(2))
+    
+    interface.ServStop.configure(command=flyff.func_server_killer(2))
+    interface.Button3.configure(command=flyff.func_server_killer(1))
+    
     
     # Client
     def to_bind_client(client):
