@@ -227,11 +227,11 @@ class FlyFFLauncher:
     
         self.list = []
         #self.list.append(ProgramServer('Account', 'AccountServer.exe', make_output_path('AccountServer'), 2, True))
-        self.list.append(ProgramServer('AccountDatabase', 'DatabaseServer.exe', make_output_path('DatabaseServer'), 3, True))
+        self.list.append(ProgramServer('AccountDatabase', 'DatabaseServer.exe', make_output_path('DatabaseServer'), 3, False))
         self.list.append(ProgramServer('CoreWorld', 'WorldServer.exe', make_output_path('WorldServer'), 4, False))
         #self.list.append(ProgramServer('Core', 'CoreServer.exe', make_output_path('CoreServer'), 2, True))
         #self.list.append(ProgramServer('Certifier', 'Certifier.exe', make_output_path('Certifier'), 2, True))
-        self.list.append(ProgramServer('CertifierLoginCache', 'LoginServer.exe', make_output_path('LoginServer'), 2, True))
+        #self.list.append(ProgramServer('CertifierLoginCache', 'LoginServer.exe', make_output_path('LoginServer'), 2, True))
         #self.list.append(ProgramServer('Cache', 'CacheServer.exe', make_output_path('CacheServer'), 2, True))
         #self.list.append(ProgramServer('WorldServer', 'WorldServer.exe', make_output_path('WorldServer'), 0, False))
         
@@ -275,6 +275,16 @@ class FlyFFLauncher:
     def kill(self):
         self.kill_server()
         self.client.kill_all_process()
+        
+    def start_app(self, i):
+        def f():
+            self.list[i - 1].start()
+        return f
+    
+    def kill_app(self, i):
+        def f():
+            self.list[i - 1].kill()
+        return f
     
     def open_dir(self):
         os.startfile("..\\")
@@ -363,7 +373,6 @@ def link_with_gui(root, interface):
         
     bind_line(0, interface.ServMsg01, interface.ServState01, interface.ServCbx01)
     bind_line(1, interface.ServMsg02, interface.ServState02, interface.ServCbx02)
-    bind_line(2, interface.ServMsg03, interface.ServState03, interface.ServCbx03)
     
     def start_in_new_thread():
         from threading import Thread
@@ -381,45 +390,22 @@ def link_with_gui(root, interface):
     
         thread = StartingThread()
         thread.start()
-        
-    def start_with_bound_maker(i):
-        def ss():
-            from threading import Thread
-            
-            class StartingThread(Thread):
-                def __init__(self):
-                    Thread.__init__(self)
-        
-                def run(self):
-                    for b in button_list:
-                        b.configure(state=tk.DISABLED)
-                        
-                    flyff.start_with_bound(i)
-                    for b in button_list:
-                        b.configure(state=tk.NORMAL)
-        
-            thread = StartingThread()
-            thread.start()
-        return ss
     
     button_list = [
-        interface.ServStart, interface.ServStart_2,
+        interface.ServStart_2,
         interface.ServStart_1, interface.Button4,
         interface.Button1, interface.Button2,
-        interface.ServStop, interface.Button3
+        interface.Button3
     ]
     
-    interface.ServStart.configure(command=start_in_new_thread)
+    interface.ServStart_1.configure(command=start_in_new_thread)
     interface.ServStart_2.configure(command=flyff.kill_server)
     
-    interface.ServStart_1.configure(command=start_in_new_thread)
-    interface.Button4.configure(command=flyff.kill_server)
+    interface.Button1.configure(command=flyff.start_app(1))
+    interface.Button4.configure(command=flyff.kill_app(1))
     
-    interface.Button1.configure(command=start_with_bound_maker(1))
-    interface.Button2.configure(command=start_with_bound_maker(2))
-    
-    interface.ServStop.configure(command=flyff.func_server_killer(2))
-    interface.Button3.configure(command=flyff.func_server_killer(1))
+    interface.Button2.configure(command=flyff.start_app(2))
+    interface.Button3.configure(command=flyff.kill_app(2))
     
     
     # Client
