@@ -225,15 +225,7 @@ class FlyFFLauncher:
         def make_output_path(name):
             return '..\\Output\\' + name + '\\Release\\' + name + '.exe'
     
-        self.list = []
-        #self.list.append(ProgramServer('Account', 'AccountServer.exe', make_output_path('AccountServer'), 2, True))
-        self.list.append(ProgramServer('AccountDatabase', 'DatabaseServer.exe', make_output_path('DatabaseServer'), 3, False))
-        self.list.append(ProgramServer('CoreWorld', 'WorldServer.exe', make_output_path('WorldServer'), 4, False))
-        #self.list.append(ProgramServer('Core', 'CoreServer.exe', make_output_path('CoreServer'), 2, True))
-        #self.list.append(ProgramServer('Certifier', 'Certifier.exe', make_output_path('Certifier'), 2, True))
-        #self.list.append(ProgramServer('CertifierLoginCache', 'LoginServer.exe', make_output_path('LoginServer'), 2, True))
-        #self.list.append(ProgramServer('Cache', 'CacheServer.exe', make_output_path('CacheServer'), 2, True))
-        #self.list.append(ProgramServer('WorldServer', 'WorldServer.exe', make_output_path('WorldServer'), 0, False))
+        self.list = [ProgramServer('SFlyFF Server', 'WorldServer.exe', make_output_path('WorldServer'), 4, False)]
         
         # Add dependencies
         for i in range(len(self.list) - 1):
@@ -334,9 +326,9 @@ def link_with_gui(root, interface):
     
     # Server
     status_text = {
-        FlyFFLauncher.STATUS_STARTED: "ON",
-        FlyFFLauncher.STATUS_OFF: "OFF",
-        FlyFFLauncher.STATUS_OBSOLETE: "UPDATE"
+        FlyFFLauncher.STATUS_STARTED: "Server is running",
+        FlyFFLauncher.STATUS_OFF: "Server is off",
+        FlyFFLauncher.STATUS_OBSOLETE: "Server can be updated"
     }
     
     status_color = {
@@ -347,8 +339,6 @@ def link_with_gui(root, interface):
     
     def bind_line(index, box_name, box_status, check_box):
         def copy_name(program):
-            box_name.configure(text=program.name)
-            
             if program.hide:
                 state = tk.NORMAL
                 check_box.deselect()
@@ -364,15 +354,13 @@ def link_with_gui(root, interface):
             program.check_box = check_box
         
         def write_status(program):
-            box_name.configure(foreground=status_color.get(program.get_status(), "black"))
             box_status.configure(text=status_text.get(program.get_status(), "Unknown"))
             box_status.configure(foreground=status_color.get(program.get_status(), "black"))
     
         flyff.apply(index, copy_name)
         flyff.bind(index, write_status)
-        
-    bind_line(0, interface.ServMsg01, interface.ServState01, interface.ServCbx01)
-    bind_line(1, interface.ServMsg02, interface.ServState02, interface.ServCbx02)
+    
+    bind_line(0, None, interface.ServState01, interface.ServCbx01)
     
     def start_in_new_thread():
         from threading import Thread
@@ -393,19 +381,11 @@ def link_with_gui(root, interface):
     
     button_list = [
         interface.ServStart_2,
-        interface.ServStart_1, interface.Button4,
-        interface.Button1, interface.Button2,
-        interface.Button3
+        interface.ServStart_1
     ]
     
     interface.ServStart_1.configure(command=start_in_new_thread)
     interface.ServStart_2.configure(command=flyff.kill_server)
-    
-    interface.Button1.configure(command=flyff.start_app(1))
-    interface.Button4.configure(command=flyff.kill_app(1))
-    
-    interface.Button2.configure(command=flyff.start_app(2))
-    interface.Button3.configure(command=flyff.kill_app(2))
     
     
     # Client
