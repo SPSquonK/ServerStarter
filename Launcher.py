@@ -5,15 +5,15 @@ import os
 import shutil
 from subprocess import Popen, PIPE
 
-# == FlyFF server launcher by SquonK, 2019 ==
-# The intent of this program is to fluidify the workflow by having an easy way to update servers executable
-# for local testing purposes.
+# == FlyFF server launcher by SquonK, 2019-2020 ==
+# The intent of this program is to fluidify the workflow by having an easy way
+# to update server executable for local testing purposes.
 #
 # Error checking is kept to a minimum as this program is not intended to be use in production context
 
 # Options
 # GIT_EXECUTABLE_PATH = None  # If you want the git button, replace with the path a git executable
-GIT_EXECUTABLE_PATH = "C:\Program Files\Git\git-bash.exe"
+GIT_EXECUTABLE_PATH = "C:\\Program Files\\Git\\git-bash.exe"
 
 
 # Represents a generic program with a source file where is written the compiled program and a destination executable.
@@ -68,7 +68,7 @@ class Program:
         for function in self.functions:
             function(self)
     
-    
+# Represents the client, which is 1 program and 0-n process
 class ProgramClient(Program):
     def __init__(self, executable, source):
         Program.__init__(self, executable, source)
@@ -103,7 +103,7 @@ class ProgramClient(Program):
         os.startfile(ini_file)
 
 
-# Represents a program which is part of a server (only one process concurrently, can have a dependencie)
+# Represents the server, which is 1 program and 0-1 process
 class ProgramServer(Program):
     startuphidden = None
 
@@ -115,16 +115,12 @@ class ProgramServer(Program):
                 ProgramServer.startuphidden.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
     # Initialize the program
-    def __init__(self, name, executable, source, timeout, hide=True):
+    def __init__(self, executable, source, hide=True):
         Program.__init__(self, "..\\Program\\" + executable, source)
     
         # Passed properties
-        self.name = name
-        self.timeout = timeout
         self.hide = hide
         self.check_box = None
-        self.dependencies = []
-        self.reliedby = []
         self.cwd = None
         
         ProgramServer.ensure_startup_exist()
@@ -132,12 +128,7 @@ class ProgramServer(Program):
         # Built properties
         self.process = None
         self.cwd = "..\\Program\\"
-        
-    # Add a dependencie
-    def add_dependencie(self, dependencie):
-        self.dependencies.append(dependencie)
-        dependencie.reliedby.append(self)
-        
+                
     # Returns true if a process for this program is running
     def is_running(self):
         if self.process is None:
@@ -150,24 +141,13 @@ class ProgramServer(Program):
         return False
         
     # If the process is running, kills it
-    def kill(self):
+    def kill_all_process(self):
         if self.process is None:
             return
         
         self.process.kill()
         self.process = None
-    
-    def kill_top(self):
-        for relied in self.reliedby:
-            relied.kill_top()
             
-        if self.is_running():
-            self.kill()
-    
-    def kill_all_process(self):
-        if self.is_running():
-            self.kill_top()
-    
     def get_status(self):
         if not self.is_running():
             return FlyFFLauncher.STATUS_OFF
@@ -179,22 +159,12 @@ class ProgramServer(Program):
     def start(self):
         restart = False
         
-        for dependencie in self.dependencies:
-            status = dependencie.start()
-            
-            if status == FlyFFLauncher.COULDNT_START:
-                return (0, FlyFFLauncher.COULDNT_START)
-            elif status == FlyFFLauncher.CHANGED_PROCESS:
-                restart = True
-        
         if not self.is_up_to_date():
             self.update()
             restart = True
         
         if self.is_running() and not restart:
-            return (0, FlyFFLauncher.ALREADY_STARTED)
-        
-        self.kill_top()
+            return FlyFFLauncher.ALREADY_STARTED
         
         startupinfo = ProgramServer.startuphidden if self.hide else None
         
@@ -203,9 +173,9 @@ class ProgramServer(Program):
         time.sleep(1)
 
         if self.is_running():
-            return (self.timeout - 1, FlyFFLauncher.CHANGED_PROCESS)
+            return FlyFFLauncher.CHANGED_PROCESS
         else:
-            return (self.timeout - 1, FlyFFLauncher.COULDNT_START)
+            return FlyFFLauncher.COULDNT_START
             
 
 # Global launcher
@@ -221,83 +191,40 @@ class FlyFFLauncher:
     # Constructor
     def __init__(self):
         self.client = ProgramClient('..\\Resource\\Neuz.exe', '..\\Output\\Neuz\\NoGameguard\\Neuz.exe')
-    
-        def make_output_path(name):
-            return '..\\Output\\' + name + '\\Release\\' + name + '.exe'
-    
-        self.list = [ProgramServer('SFlyFF Server', 'WorldServer.exe', make_output_path('WorldServer'), 4, False)]
-        
-        # Add dependencies
-        for i in range(len(self.list) - 1):
-            self.list[i + 1].add_dependencie(self.list[i])
+        self.server = ProgramServer('WorldServer.exe', '..\\Output\\{0}\\Release\\{0}.exe'.format('WorldServer'), False)
     
     # Launch every process of the list
     def start(self):
-        extra_timeout = 0
-        for program in self.list:
-            if extra_timeout != 0:
-                time.sleep(extra_timeout)
-            
-            extra_timeout, error = program.start() 
-            if error == FlyFFLauncher.COULDNT_START:
-                return False
-        return True
-        
-    def start_with_bound(self, i):
-        extra_timeout = 0
-        for program in self.list[0:i]:
-            if extra_timeout != 0:
-                time.sleep(extra_timeout)
-                
-            extra_timeout, error = program.start() 
-            if error == FlyFFLauncher.COULDNT_START:
-                return False
+        error = self.server.start() 
+        if error == FlyFFLauncher.COULDNT_START:
+            return False
         return True
     
     def kill_server(self):
-        for program in self.list:
-            program.kill()
-    
-    def func_server_killer(self, i):
-        def f():
-            for program in self.list[i:]:
-                program.kill()
-        return f
+        self.server.kill_all_process()
     
     def kill(self):
-        self.kill_server()
+        self.server.kill_all_process()
         self.client.kill_all_process()
         
-    def start_app(self, i):
-        def f():
-            self.list[i - 1].start()
-        return f
-    
-    def kill_app(self, i):
-        def f():
-            self.list[i - 1].kill()
-        return f
-    
     def open_dir(self):
         os.startfile("..\\")
     
     # GUI
-    def bind(self, index, function):
-        self.list[index].bind(function)
+    def bind_server(self, function):
+        self.server.bind(function)
         
     def bind_client(self, function):
         self.client.bind(function)
         
-    def apply(self, index, function):
-        function(self.list[index])
+    def apply_server(self, function):
+        function(self.server)
         
     def apply_client(self, function):
         function(self.client)
         
     def use_binds(self):
-        for program in self.list:
-            program.use_bind()
-        
+        self.server.use_bind()
         self.client.use_bind()
 
 
@@ -324,20 +251,22 @@ def link_with_gui(root, interface):
     # Extra button
     interface.OpenFlyFFDir.configure(command=flyff.open_dir)
     
-    # Server
-    status_text = {
-        FlyFFLauncher.STATUS_STARTED: "Server is running",
-        FlyFFLauncher.STATUS_OFF: "Server is off",
-        FlyFFLauncher.STATUS_OBSOLETE: "Server can be updated"
-    }
-    
+    # Bindings    
     status_color = {
         FlyFFLauncher.STATUS_STARTED: "#005000",
         FlyFFLauncher.STATUS_OFF: "#FF0000",
         FlyFFLauncher.STATUS_OBSOLETE: "#FF8000"
     }
     
-    def bind_line(index, box_name, box_status, check_box):
+    # Server Bindings
+    def install_server_bindings():
+        status_text = {
+            FlyFFLauncher.STATUS_STARTED: "Server is running",
+            FlyFFLauncher.STATUS_OFF: "Server is off",
+            FlyFFLauncher.STATUS_OBSOLETE: "Server can be updated"
+        }
+
+        check_box = interface.ServCbx01
         def copy_name(program):
             if program.hide:
                 state = tk.NORMAL
@@ -354,14 +283,14 @@ def link_with_gui(root, interface):
             program.check_box = check_box
         
         def write_status(program):
-            box_status.configure(text=status_text.get(program.get_status(), "Unknown"))
-            box_status.configure(foreground=status_color.get(program.get_status(), "black"))
+            interface.ServState01.configure(text=status_text.get(program.get_status(), "Unknown"))
+            interface.ServState01.configure(foreground=status_color.get(program.get_status(), "black"))
     
-        flyff.apply(index, copy_name)
-        flyff.bind(index, write_status)
+        flyff.apply_server(copy_name)
+        flyff.bind_server(write_status)
     
-    bind_line(0, None, interface.ServState01, interface.ServCbx01)
-    
+    install_server_bindings()
+
     def start_in_new_thread():
         from threading import Thread
         
@@ -370,6 +299,7 @@ def link_with_gui(root, interface):
                 Thread.__init__(self)
     
             def run(self):
+                button_list = [interface.ServStart_2, interface.ServStart_1]
                 for b in button_list:
                     b.configure(state=tk.DISABLED)
                 flyff.start()
@@ -378,11 +308,6 @@ def link_with_gui(root, interface):
     
         thread = StartingThread()
         thread.start()
-    
-    button_list = [
-        interface.ServStart_2,
-        interface.ServStart_1
-    ]
     
     interface.ServStart_1.configure(command=start_in_new_thread)
     interface.ServStart_2.configure(command=flyff.kill_server)

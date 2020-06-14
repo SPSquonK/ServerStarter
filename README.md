@@ -1,8 +1,15 @@
 # ServerStarter
 
-This is a small python script intended to FlyFF developpers to make it easier to start / restart the parts of the server during development.
+This is a small python script intended to FlyFF developpers to make it easier to
+start / restart the parts of the server during development.
 
 ![A screenshot](Screenshot.png)
+
+This branch is the SFlyFF Branch. SFlyFF is my local server which has every
+server parts merged to reduce the synchronization problems and rework the
+architecture more easily.
+
+You can find a better suitable code for your server in the master branch.
 
 ## Install the script
 
@@ -26,19 +33,19 @@ This script is able to start the differents programs managing a server and start
 
 - The script tracks for new Server Executable and can run them
 
-    - This script uses the files found in `..\Output\X\Release\X.exe` as the "newly compiled files" where X can be AccountServer, CacheServer, Certifier, CoreServer, DatabaseServer, LoginServer or WorldServer. When the user starts a server, it will check if new compiled files are more up to date than the one in `Program`, and if so, it will replace the one in the Program folder with the one in the Output folder.
+    - This script uses the files found in `..\Output\X\Release\X.exe` as the "newly compiled files" where X is WorldServer. When the user starts a server, it will check if new compiled files are more up to date than the one in `Program`, and if so, it will replace the one in the Program folder with the one in the Output folder.
 
-    - The server is started using the executables in `..\Program.exe`.
+    - The server is started using the executables in `..\Program\WorldServer.exe`.
 
     - The script tracks every second if new compiled files are available, and displays it. When pressing Start, if the server is running and some parts are either off or obsoleted by a new compilation, the script will shutdown the needed parts, update the executables, and restart the server.
 
-    - Windows can be hidden to lighten the taskbar by checking the checkbox before starting the server.
+    - Windows can be hidden to lighten the taskbar by checking the checkbox before starting the server (let's pretend it is still relevant).
 
 - A similar machinery is applied to Neuz : 
 
     - Original Neuz is found in `..\Output\Neuz\NoGameguard\Neuz.exe` for update purpose.
     
-    - The script enables to run `..\Resource\Neuz.exe`and edit its corresponding ini file with a simple button
+    - The script enables to run `..\Resource\Neuz.exe` and edit its corresponding ini file with a simple button
     
     - If the user starts Neuz, and no Neuz is running, it will copy the eventual new compiled executable from Output to Resource.
 
@@ -57,24 +64,6 @@ This script is able to start the differents programs managing a server and start
 
 - This script is only intended for development purpose, and should not be used in production. The main reason you shouldn't use this in production context is that the main goal of the application, tracking for newly compiled executables and replacing started processes, is useless in this case.
 
-- It is possible to make a "Git" button appears which will open a git friendly terminal in the parent folder. To enables this option, open Launcher.py, and modify the line which starts with GIT_EXECUTABLE_PATH to specify a folter to your favorite terminal. If you use a Git Bash instance that is installed in the default folder, you can also comment the first GIT_EXECUTABLE_PATH line and uncomment the second one.
-
-- For production context, if one wants to have a simple script to runs every part of the server without the layer of executable tracking and without the hassle of starting manually 7 processes, here is a simple bat script :
-
-```bash
-start "" AccountServer.exe
-timeout 2
-start "" DatabaseServer.exe
-timeout 2
-start "" CoreServer.exe
-timeout 2
-start "" Certifier.exe
-timeout 2
-start "" LoginServer.exe
-timeout 2
-start "" CacheServer.exe
-timeout 2
-start "" WorldServer.exe
-```
+- A "Git" button is also present which will open a git friendly terminal in the parent folder. To disable this option, open Launcher.py, and modify the line which starts with GIT_EXECUTABLE_PATH.
 
 - This script is distributed under the MIT Licence.
