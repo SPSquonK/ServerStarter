@@ -21,7 +21,10 @@ class Program:
     def __init__(self, executable, source):
         self.executable = executable
         self.source = source
-        self.dateofexecutable = os.path.getmtime(self.executable)
+        try :
+            self.dateofexecutable = os.path.getmtime(self.executable)
+        except:
+            self.dateofexecutable = 0
         self.isuptodate = True
         self.functions = []
     
