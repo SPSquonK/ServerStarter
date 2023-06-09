@@ -3,7 +3,14 @@ import sys
 import time
 import os
 import shutil
+import ctypes
 from subprocess import Popen, PIPE
+
+# Import tkinter
+try:
+    import Tkinter as tk
+except ImportError:
+    import tkinter as tk
 
 # == FlyFF server launcher by SquonK, 2019 ==
 # The intent of this program is to fluidify the workflow by having an easy way to update servers executable
@@ -178,7 +185,7 @@ class ProgramServer(Program):
             return FlyFFLauncher.STATUS_STARTED
         else:
             return FlyFFLauncher.STATUS_OBSOLETE
-    
+        
     def start(self):
         restart = False
         
@@ -198,7 +205,9 @@ class ProgramServer(Program):
             return FlyFFLauncher.ALREADY_STARTED
         
         self.kill_top()
-        
+        return self.solo_start()
+    
+    def solo_start(self):
         startupinfo = ProgramServer.startuphidden if self.hide else None
         
         self.process = self.start_a_new_process(startupinfo)
@@ -209,7 +218,63 @@ class ProgramServer(Program):
             return FlyFFLauncher.CHANGED_PROCESS
         else:
             return FlyFFLauncher.COULDNT_START
-            
+
+    def change_visibility(self):
+        because_i_cant_get_the_hwnd_with_the_pid = {
+            "Account": ["AccountServer"],
+            "Database": ["Trans Server"],
+            "Core": ["Core Server"],
+            "Certifier": ["Certifier"],
+            "Login": ["Login Server"],
+            "Cache": ["Cache Server"],
+            "WorldServer": ["World Server(101)-English", "World Server(101)-French"]
+        }
+
+        possible_titles = because_i_cant_get_the_hwnd_with_the_pid[self.name]
+        if not possible_titles:
+            return
+
+        user32 = ctypes.WinDLL("user32.dll")
+
+        hwnd = None
+        for possible_title in possible_titles:
+            hwnd = user32.FindWindowW(None, possible_title)
+            if hwnd is not None:
+                break
+
+        if hwnd is None:
+            return
+
+        SW_HIDE = 0
+        SW_SHOW = 5
+        new_visibility = SW_HIDE if user32.IsWindowVisible(hwnd) else SW_SHOW
+        user32.ShowWindow(hwnd, new_visibility)
+
+    def add_contextual_menu(self, components, tkRoot):
+        def get_state_for(boolean):
+            if boolean:
+                return "active"
+            else:
+                return "disabled"
+
+        def create_contextual(event):
+            normalized_name = self.name
+            if not normalized_name.endswith("Server"):
+                normalized_name = normalized_name + "Server"
+
+            menu = tk.Menu(tkRoot, tearoff=0)
+            menu.add_command(label="Start " + normalized_name, state=get_state_for(not self.is_running()), command=self.solo_start)
+            menu.add_command(label="Stop " + normalized_name, state=get_state_for(self.is_running()), command=self.kill)
+            menu.add_separator()
+            menu.add_command(label="Start until " + normalized_name, state=get_state_for(not self.is_running()), command=self.start)
+            menu.add_command(label="Stop from " + normalized_name, state=get_state_for(self.is_running()), command=self.kill_top)
+            menu.add_separator()
+            menu.add_command(label="Show/Hide", state=get_state_for(self.is_running()), command=self.change_visibility)
+
+            menu.post(event.x_root, event.y_root)
+
+        for component in components:
+            component.bind("<Button-3>", create_contextual)
 
 # Global launcher
 class FlyFFLauncher:
@@ -282,12 +347,6 @@ class FlyFFLauncher:
 # ==== LINK WITH UI ====
 
 def link_with_gui(root, interface):
-    # Import tkinter
-    try:
-        import Tkinter as tk
-    except ImportError:
-        import tkinter as tk
-
     # Master model object
     flyff = FlyFFLauncher()
     
@@ -331,8 +390,8 @@ def link_with_gui(root, interface):
             
             check_box.configure(state=state)
             check_box.configure(command=change)
-            program.check_box = check_box
-        
+            program.check_box = check_box           
+                    
         def write_status(program):
             box_name.configure(foreground=status_color.get(program.get_status(), "black"))
             box_status.configure(text=status_text.get(program.get_status(), "Unknown"))
@@ -340,6 +399,7 @@ def link_with_gui(root, interface):
     
         flyff.apply(index, copy_name)
         flyff.bind(index, write_status)
+        flyff.list[index].add_contextual_menu([box_name, box_status], root)
         
     bind_line(0, interface.ServMsg01, interface.ServState01, interface.ServCbx01)
     bind_line(1, interface.ServMsg02, interface.ServState02, interface.ServCbx02)
