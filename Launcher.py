@@ -19,8 +19,8 @@ except ImportError:
 # Error checking is kept to a minimum as this program is not intended to be use in production context
 
 # Options
-GIT_EXECUTABLE_PATH = None  # If you want the git button, replace with the path a git executable
-# GIT_EXECUTABLE_PATH = "C:\Program Files\Git\git-bash.exe"
+# GIT_EXECUTABLE_PATH = None  # If you want the git button, replace with the path a git executable
+GIT_EXECUTABLE_PATH = "C:\Program Files\Git\git-bash.exe"
 
 
 # Represents a generic program with a source file where is written the compiled program and a destination executable.
@@ -205,9 +205,15 @@ class ProgramServer(Program):
             return FlyFFLauncher.ALREADY_STARTED
         
         self.kill_top()
-        return self.solo_start()
+        return self.start_the_process()
     
     def solo_start(self):
+        if not self.is_up_to_date():
+            self.update()
+
+        return self.start_the_process()
+
+    def start_the_process(self):
         startupinfo = ProgramServer.startuphidden if self.hide else None
         
         self.process = self.start_a_new_process(startupinfo)
